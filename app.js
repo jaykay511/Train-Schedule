@@ -18,7 +18,7 @@ $("#add-train-btn").on("click", function(event) {
   // Grab user input
   var tname = $("#train-name").val().trim();
   var tdest = $("#destination").val().trim();
-  var ttime = moment($("#ftraintime").val().trim(), "hh:mm a").format("X");
+  var ttime = moment($("#ftraintime").val().trim(), "HH:mm").format("X");
   var tfreq = $("#frequency").val().trim();
 
   var newTrain = {
@@ -49,19 +49,39 @@ database.ref().on("child_added", function(snapshot) {
   var ttime = snapshot.val().ttime;
   var tfreq = snapshot.val().tfreq;
 
-  // Convert unix to readable time
+  // First time (pushed back 1 year to ensure it comes before current time)
+  var firstTimeConverted = moment(ttime, "HH:mm").subtract(1, "years");
+  console.log(firstTimeConverted);
 
-  // Calculate min away and next arrival
+  // Current Time
+  var currentTime = moment();
+  console.log("Current time: " + moment(currentTime).format("HH:mm"));
+
+  // Difference between times
+  var diffTime = moment().diff(moment(firstTimeConverted), "minutes");
+  console.log("Difference between times: " + diffTime);
+
+  // Time apart (remainder)
+  var tRemainder = diffTime % tfreq;
+  console.log(tRemainder);
+
+  // Minutes until next train
+  var minTillTrain = tfreq - tRemainder;
+
+  // Next Train
+  var nextTrain = moment(moment().add(minTillTrain, "minutes")).format("HH:mm");
 
   // Create new row
   var newRow = $("<tr>").append(
     $("<td>").text(tname),
     $("<td>").text(tdest),
     $("<td>").text(tfreq),
-    $("<td>").text("placeholder"),
-    $("<td>").text("placeholder")
+    $("<td>").text(nextTrain),
+    $("<td>").text(minTillTrain)
   );
 
   $("#train-table > tbody").append(newRow);
 
 });
+
+console.log(moment());
